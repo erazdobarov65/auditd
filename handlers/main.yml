@@ -1,0 +1,26 @@
+---
+# handlers file for auditd
+
+- name: Run augenrules
+  ansible.builtin.command:
+    cmd: augenrules
+  changed_when: yes
+  notify:
+    - Load rules
+
+- name: Load rules
+  ansible.builtin.command:
+    cmd: augenrules --load
+  changed_when: yes
+
+- name: Restart auditd
+  ansible.builtin.service:
+    name: "{{ auditd_service }}"
+    state: restarted
+    use: service  # systemctl can't restart auditd
+
+- name: Restart rsyslog
+  ansible.builtin.service:
+    name: "{{ rsyslog_service }}"
+    state: restarted
+    use: service  # systemctl can't restart auditd
