@@ -1,0 +1,205 @@
+#DIB_TAZ Oracle
+#Kernel Related Events
+-w /etc/sysctl.conf -p wa -k sysctl_launched
+-w /etc/sysctl.d -p wa -k sysctl_DIB
+
+#Stunnel 
+-w /usr/sbin/stunnel -p x -k T1079_Multilayer_Encryption
+
+## Cron configuration & scheduled jobs related events
+-w /etc/cron.allow -p wa -k T1168_Local_Job_Scheduling
+-w /etc/cron.deny -p wa -k T1168_Local_Job_Scheduling
+-w /etc/cron.d/ -p wa -k T1168_Local_Job_Scheduling
+-w /etc/cron.daily/ -p wa -k T1168_Local_Job_Scheduling
+-w /etc/cron.hourly/ -p wa -k T1168_Local_Job_Scheduling
+-w /etc/cron.monthly/ -p wa -k T1168_Local_Job_Scheduling
+-w /etc/cron.weekly/ -p wa -k T1168_Local_Job_Scheduling
+-w /etc/crontab -p wa -k T1168_Local_Job_Scheduling
+-w /var/spool/cron/ -k T1168_Local_Job_Scheduling_DIB
+-w /var/spool/cron/crontabs/ -k T1168_Local_Job_Scheduling
+-w /etc/inittab -p wa -k T1168_Local_Job_Scheduling
+-w /etc/init.d/ -p wa -k T1168_Local_Job_Scheduling
+-w /etc/init/ -p wa -k T1168_Local_Job_Scheduling
+-w /etc/at.allow -p wa -k T1168_Local_Job_Scheduling
+-w /etc/at.deny -p wa -k T1168_Local_Job_Scheduling
+-w /var/spool/at/ -p wa -k T1168_Local_Job_Scheduling
+-w /etc/anacrontab -p wa -k T1168_Local_Job_Scheduling
+
+#Account Related Events
+-w /usr/bin/passwd -p x -k T1078_Valid_Accounts
+-w /usr/sbin/groupadd -p x -k T1078_Valid_Accounts
+-w /usr/sbin/groupmod -p x -k T1078_Valid_Accounts
+-w /usr/sbin/addgroup -p x -k T1078_Valid_Accounts
+-w /usr/sbin/useradd -p x -k T1078_Valid_Accounts
+-w /usr/sbin/usermod -p x -k T1078_Valid_Accounts
+-w /usr/sbin/adduser -p x -k T1078_Valid_Accounts
+-w /usr/sbin/userdel -p x -k T1078_Valid_Accounts_user_modification_DIB
+
+#Privleged Command Execution Related Events
+-a always,exit -F path=/bin/umount -F perm=x -F auid>=1000 -F auid!=4294967295 -k T1078_Valid_Accounts
+-a always,exit -F path=/bin/su -F perm=x -F auid>=1000 -F auid!=4294967295 -k T1078_Valid_Accounts
+-a always,exit -F path=/bin/ping -F perm=x -F auid>=1000 -F auid!=4294967295 -k T1078_Valid_Accounts
+-a always,exit -F path=/usr/bin/crontab -F perm=x -F auid>=1000 -F auid!=4294967295 -k T1078_Valid_Accounts
+-a always,exit -F path=/usr/bin/sudo -F perm=x -F auid>=1000 -F auid!=4294967295 -k T1078_Valid_Accounts
+-a always,exit -F path=/usr/bin/passwd -F perm=x -F auid>=1000 -F auid!=4294967295 -k T1078_Valid_Accounts
+-a always,exit -F path=/usr/sbin/usermod -F perm=x -F auid>=1000 -F auid!=4294967295 -k privileged-usermod
+-a always,exit -F path=/usr/bin/sudoedit -F perm=x -F auid>=1000 -F auid!=4294967295 -k priv_cmd 
+
+#SSH Related Events
+-w /etc/ssh/sshd_config -k T1021_Remote_Services
+-w /etc/ssh/sshd_config.d -k T1021_Remote_Services_DIB
+-w /root/.ssh -p wa -k T1021_Remote_Services_rootkey_DIB
+
+#Configure the audit system to generate an audit event for any successful/unsuccessful use of the "ssh-agent" command.
+-a always,exit -F path=/usr/bin/ssh-agent -F perm=x -F auid>=1000 -F auid!=4294967295 -k privileged-ssh
+#Configure the audit system to generate an audit event for any successful/unsuccessful use of the "ssh-keysign" command.
+-a always,exit -F path=/usr/libexec/openssh/ssh-keysign -F perm=x -F auid>=1000 -F auid!=4294967295 -k privileged-ssh
+
+##C2 Releated Events
+#Log 64 bit processes (a2!=6e filters local unix socket calls)
+-a exit,always -F arch=b64 -S connect -F a2!=110 -k T1043_Commonly_Used_Port
+
+#Log 32 bit processes (a0=3 means only outbound sys_connect calls)
+-a exit,always -F arch=b32 -S socketcall -F a0=3 -k T1043_Commonly_Used_Port
+
+#Priv Escalation Related Events
+-w /bin/su -p x -k T1169_Sudo
+-w /usr/bin/sudo -p x -k T1169_Sudo
+
+#Chown&chmod
+-w /usr/bin/chmod -p x -k T1166_Seuid_and_Setgid_DIB
+-w /usr/bin/chown -p x -k T1166_Seuid_and_Setgid_DIB
+-w /bin/chmod -p x -k T1166_Seuid_and_Setgid_DIB
+-w /bin/chown -p x -k T1166_Seuid_and_Setgid_DIB
+
+# Recon Related Events
+-w /usr/bin/whoami -p x -k T1033_System_Owner_User_Discovery
+-w /bin/uname -p x -k T1082_System_Information_Discovery_DIB
+-w /sbin/iptables -p x -k T1082_System_Information_Discovery
+-w /sbin/ip6tables -p x -k T1082_System_Information_Discovery_DIB
+-w /etc/resolv.conf -k T1016_System_Network_Configuration_Discovery
+-w /etc/hosts.allow -k T1016_System_Network_Configuration_Discovery
+-w /etc/hosts.deny -k T1016_System_Network_Configuration_Discovery
+-w /etc/sysconfig/network-scripts -p w -k System_Network_modifications_DIB
+
+-w /etc/networks -p wa -k System_Network_modifications_DIB
+-a always,exit -F dir=/etc/NetworkManager/ -F perm=wa -k System_Network_modifications_DIB
+-w /usr/sbin/tcpdump -p x -k T1049_System_Network_Connections_discovery
+-w /usr/bin/grep -p x -k T1081_Credentials_In_Files
+-w /usr/bin/egrep -p x -k T1081_Credentials_In_Files
+-w /usr/bin/ps -p x -k T1057_Process_Discovery
+-w /usr/bin/nmap -p x -k T1049_System_Network_Connections_discovery_DIB
+
+#Data Copy(Local)
+-w /usr/bin/cp -p x -k T1005_Data_from_Local_System
+-w /usr/bin/dd -p x -k T1005_Data_from_Local_System
+
+#Remote Access Related Events
+-w /usr/bin/wget -p x -k T1219_Remote_Access_Tools
+-w /usr/bin/curl -p x -k T1219_Remote_Access_Tools
+-w /usr/bin/base64 -p x -k T1219_Remote_Access_Tools
+-w /bin/nc -p x -k T1219_Remote_Access_Tools
+-w /bin/netcat -p x -k T1219_Remote_Access_Tools
+-w /usr/bin/ncat -p x -k T1219_Remote_Access_Tools
+-w /usr/bin/ssh -p x -k T1219_Remote_Access_Tools
+-w /usr/bin/socat -p x -k T1219_Remote_Access_Tools
+-w /usr/bin/rdesktop -p x -k T1219_Remote_Access_Tools
+-w /bin/nc.openbsd -p x -k T1219_Remote_Access_Tools_DIB
+-w /bin/nc.traditional -p x -k T1219_Remote_Access_Tools_DIB
+
+#Third Party Software
+#PIP (Python installs)
+-w /usr/bin/pip -p x -k T1072_third_party_software_DIB
+-w /usr/bin/pip3 -p x -k T1072_third_party_software_DIB
+
+#DPKG / APT-GET (Debian/Ubuntu)
+-w /usr/bin/snap -p x -k T1072_third_party_software_DIB
+
+#RPM (Redhat/CentOS/Fedora)
+-w /usr/bin/rpm -p x -k T1072_third_party_software
+-w /usr/bin/yum -p x -k T1072_third_party_software
+
+#DNF (Fedora/RedHat 8/CentOS 8)
+-w /usr/bin/dnf -p x -k T1072_third_party_software_DIB
+
+#Shell configuration Persistence Related Events
+-w /etc/profile.d/ -k T1156_bash_profile_and_bashrc
+-w /etc/profile -k T1156_bash_profile_and_bashrc
+-w /etc/shells -k T1156_bash_profile_and_bashrc
+-w /etc/bashrc -k T1156_bash_profile_and_bashrc
+
+#Suspicious shells
+-w /bin/dash -p x -k Suspicious_shell_DIB
+-w /bin/ash -p x -k Suspicious_shell_DIB
+-w /bin/bash -p x -k Suspicious_shell_DIB
+-w /bin/csh -p x -k Suspicious_shell_DIB
+-w /bin/busybox -p x -k Suspicious_shell_DIB
+-w /bin/ksh -p x -k Suspicious_shell_DIB
+-w /bin/fish -p x -k Suspicious_shell_DIB
+-w /bin/tcsh -p x -k Suspicious_shell_DIB
+-w /bin/tclsh -p x -k Suspicious_shell_DIB
+-w /bin/zsh -p x -k Suspicious_shell_DIB
+
+#Remote File Copy
+-w /usr/bin/ftp -p x -k T1105_remote_file_copy
+-w /usr/bin/scp -p x -k T1105_remote_file_copy_DIB
+-w /usr/bin/sftp -p x -k T1105_remote_file_copy_DIB
+
+##Power_state DIB
+-w /sbin/shutdown -p x -k power_state_DIB
+-w /sbin/poweroff -p x -k power_state_DIB
+-w /sbin/reboot -p x -k power_state_DIB
+-w /sbin/halt -p x -k power_state_DIB
+
+####DIB CONFIG TEST####
+-w /var/lib/jenkins -p wa -k change_jenkins_DIB
+
+#Unexpected changes to these files could be an indication that the system has been compromised and that an unauthorized user is attempting to hide their activities or compromise additional accounts.
+-w /etc/group -p wa -k identity
+-w /etc/passwd -p wa -k identity
+-w /etc/gshadow -p wa -k identity
+-w /etc/shadow -p wa -k identity
+-w /etc/security/opasswd -p wa -k identity
+
+#Changes in the /etc/sudoers file can indicate that an unauthorized change has been made to scope of system administrator activity.
+-w /etc/sudoers -p wa -k scope
+-w /etc/sudoers.d/ -p wa -k scope
+
+#Monitoring login/logout events could provide a system administrator with information associated with brute force attacks against user logins.
+-w /var/log/faillog -p wa -k logins
+-w /var/log/lastlog -p wa -k logins
+
+#Monitoring these files for changes could alert a system administrator to logins occurring at unusual hours, which could indicate intruder activity (i.e. a user logging in at a time when they do not normally log in).
+-w /var/run/utmp -p wa -k session
+-w /var/log/wtmp -p wa -k logins
+-w /var/log/btmp -p wa -k logins
+
+#Unexpected changes in system date and/or time could be a sign of malicious activity on the system.
+-a always,exit -F arch=b64 -S adjtimex -S settimeofday -k time-change
+-a always,exit -F arch=b64 -S clock_settime -k time-change
+-w /etc/localtime -p wa -k time-change
+
+#Monitoring sethostname and setdomainname will identify potential unauthorized changes to host and domainname of a system.
+-a always,exit -F arch=b64 -S sethostname -S setdomainname -k system-locale
+-w /etc/issue -p wa -k system-locale
+-w /etc/issue.net -p wa -k system-locale
+-w /etc/hosts -p wa -k system-locale
+-w /etc/network -p wa -k system-locale
+
+#AWK Monitoring for changes in file attributes could alert a system administrator to activity that could indicate intruder activity or policy violation.
+-a always,exit -F arch=b64 -S chmod -S fchmod -S fchmodat -F auid>=1000 -F auid!=4294967295 -k perm_mod
+-a always,exit -F arch=b64 -S chown -S fchown -S fchownat -S lchown -F auid>=1000 -F auid!=4294967295 -k perm_mod
+-a always,exit -F arch=b64 -S setxattr -S lsetxattr -S fsetxattr -S removexattr -S lremovexattr -S fremovexattr -F auid>=1000 -F auid!=4294967295 -k perm_mod
+
+#Configure the audit system to generate an audit event for any successful/unsuccessful use of the "setxattr" system call
+-a always,exit -F arch=b64 -S setxattr -S lsetxattr -S fsetxattr -S removexattr -S lremovexattr -S fremovexattr -F auid=0 -k perm_mod
+
+#AWK Failed attempts to open, create or truncate files could be an indication that an individual or process is trying to gain unauthorized access to the system.
+-a always,exit -F arch=b64 -S creat -S open -S openat -S truncate -S ftruncate -F exit=-EACCES -F auid>=1000 -F auid!=4294967295 -k access
+-a always,exit -F arch=b64 -S creat -S open -S openat -S truncate -S ftruncate -F exit=-EPERM -F auid>=1000 -F auid!=4294967295 -k access
+
+#It is highly unusual for a non privileged user to mount file systems to the system. 
+-a always,exit -F arch=b64 -S mount -F auid>=1000 -F auid!=4294967295 -k mounts
+
+#Monitoring these calls from non-privileged users could provide a system administrator with evidence that inappropriate removal of files and file attributes associated with protected files is occurring. 
+-a always,exit -F arch=b64 -S unlink -S unlinkat -S rename -S renameat -F auid>=1000 -F auid!=4294967295 -k delete
